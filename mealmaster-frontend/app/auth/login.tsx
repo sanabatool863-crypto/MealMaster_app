@@ -1,20 +1,41 @@
 ﻿import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
+import { api, setToken } from "@/lib/api";
 
 export default function Login() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (email.trim() === "" || password.trim() === "") {
             alert("Please enter email and password");
             return;
         }
 
-        // Simple login → go to home
-        router.replace("/(tabs)");
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            alert("Please enter a valid email address");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await api.post("/api/auth/login", { email, password });
+            
+            if (response.data.token) {
+                await setToken(response.data.token);
+                router.replace("/(tabs)");
+            }
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Login failed. Please try again.";
+            alert(message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -37,8 +58,16 @@ export default function Login() {
                 onChangeText={setPassword}
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
+            <TouchableOpacity 
+                style={[styles.button, loading && styles.buttonDisabled]} 
+                onPress={handleLogin}
+                disabled={loading}
+            >
+                {loading ? (
+                    <ActivityIndicator color="white" />
+                ) : (
+                    <Text style={styles.buttonText}>Login</Text>
+                )}
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => router.push("/auth/signup")}>
@@ -87,5 +116,8 @@ const styles = StyleSheet.create({
         textAlign: "center",
         color: "#05676A",
         fontWeight: "600",
+    },
+    buttonDisabled: {
+        opacity: 0.6,
     },
 });

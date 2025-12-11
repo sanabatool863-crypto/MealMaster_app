@@ -9,9 +9,7 @@ import {
     ActivityIndicator,
     TouchableOpacity,
 } from "react-native";
-import axios from "axios";
-
-const BASE_URL = "http://192.168.0.120:5000";
+import { api } from "@/lib/api";
 
 interface Ingredient {
     name: string;
@@ -34,8 +32,11 @@ export default function RecipeDetails() {
 
     const fetchRecipe = useCallback(async () => {
         try {
-            const res = await axios.get(`${BASE_URL}/api/recipes/${id}`);
+            const res = await api.get(`/api/recipes/${id}`);
             setRecipe(res.data);
+        } catch (error: any) {
+            console.error("Error fetching recipe:", error);
+            // Error will be handled by showing loading state
         } finally {
             setLoading(false);
         }

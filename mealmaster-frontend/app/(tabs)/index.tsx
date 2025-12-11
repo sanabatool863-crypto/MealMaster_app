@@ -9,10 +9,8 @@ import {
     ScrollView,
     ActivityIndicator,
 } from "react-native";
-import axios from "axios";
 import { useRouter } from "expo-router";
-
-const BASE_URL = "http://192.168.0.120:5000";
+import { api } from "@/lib/api";
 
 interface Ingredient {
     name: string;
@@ -47,11 +45,17 @@ export default function IndexPage() {
         try {
             setLoading(true);
 
-            const res = await axios.get(`${BASE_URL}/api/recipes`, {
+            const res = await api.get("/api/recipes", {
                 params: dietFilter ? { diet: dietFilter } : {},
             });
 
             setRecipes(res.data);
+        } catch (error: any) {
+            console.error("Error fetching recipes:", error);
+            // Optionally show error to user
+            if (error.response?.status !== 401) {
+                // Don't show error for 401, it's handled by interceptor
+            }
         } finally {
             setLoading(false);
         }

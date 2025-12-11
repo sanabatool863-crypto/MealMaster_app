@@ -15,21 +15,29 @@ router.post("/generate", async (req, res) => {
 
         const recipes = await Recipe.find({ _id: { $in: recipeIds } });
 
+        if (recipes.length === 0) {
+            return res.status(404).json({ message: "No recipes found with the provided IDs" });
+        }
+
         const itemsMap = new Map();
 
         recipes.forEach((recipe) => {
-            recipe.ingredients.forEach((ing) => {
-                const key = ing.name.toLowerCase();
+            if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+                recipe.ingredients.forEach((ing) => {
+                    if (ing && ing.name) {
+                        const key = ing.name.toLowerCase();
 
-                if (!itemsMap.has(key)) {
-                    itemsMap.set(key, {
-                        name: ing.name,
-                        quantities: [ing.quantity],
-                    });
-                } else {
-                    itemsMap.get(key).quantities.push(ing.quantity);
-                }
-            });
+                        if (!itemsMap.has(key)) {
+                            itemsMap.set(key, {
+                                name: ing.name,
+                                quantities: [ing.quantity || ""],
+                            });
+                        } else {
+                            itemsMap.get(key).quantities.push(ing.quantity || "");
+                        }
+                    }
+                });
+            }
         });
 
         const groceryList = Array.from(itemsMap.values()).map((item) => ({

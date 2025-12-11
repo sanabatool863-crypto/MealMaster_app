@@ -29,6 +29,9 @@ router.get("/:id", async (req, res) => {
         res.json(recipe);
     } catch (err) {
         console.error("Error fetching recipe:", err.message);
+        if (err.name === "CastError") {
+            return res.status(400).json({ message: "Invalid recipe ID" });
+        }
         res.status(500).json({ message: "Server error" });
     }
 });
@@ -36,11 +39,36 @@ router.get("/:id", async (req, res) => {
 // POST /api/recipes (create new recipe)
 router.post("/", async (req, res) => {
     try {
-        const recipe = new Recipe(req.body);
+        const { name, dietType, image, ingredients, steps } = req.body;
+
+        // Validation
+        if (!name || !image || !ingredients || !steps) {
+            return res.status(400).json({ message: "Missing required fields: name, image, ingredients, and steps are required" });
+        }
+
+        if (!Array.isArray(ingredients) || ingredients.length === 0) {
+            return res.status(400).json({ message: "Ingredients must be a non-empty array" });
+        }
+
+        if (!Array.isArray(steps) || steps.length === 0) {
+            return res.status(400).json({ message: "Steps must be a non-empty array" });
+        }
+
+        const recipe = new Recipe({
+            name,
+            dietType: dietType || "regular",
+            image,
+            ingredients,
+            steps
+        });
+        
         await recipe.save();
         res.status(201).json(recipe);
     } catch (err) {
         console.error("Error creating recipe:", err.message);
+        if (err.name === "ValidationError") {
+            return res.status(400).json({ message: err.message });
+        }
         res.status(400).json({ message: "Bad request" });
     }
 });

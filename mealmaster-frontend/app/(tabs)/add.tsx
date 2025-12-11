@@ -1,34 +1,56 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
-import axios from "axios";
-
-const BASE_URL = "http://192.168.0.120:5000";
+import { api } from "@/lib/api";
 
 export default function Add() {
     const [name, setName] = useState("");
     const [diet, setDiet] = useState("");
+    const [image, setImage] = useState("");
     const [ingredients, setIngredients] = useState("");
     const [steps, setSteps] = useState("");
 
     const submit = async () => {
+        if (!name.trim() || !diet.trim() || !image.trim() || !ingredients.trim() || !steps.trim()) {
+            alert("Please fill all fields");
+            return;
+        }
+
         try {
             const ingList = ingredients.split(",").map((s) => {
                 const [n, q] = s.split("-");
                 return { name: n.trim(), quantity: q?.trim() || "" };
-            });
+            }).filter(ing => ing.name.trim() !== "");
 
-            const stepsList = steps.split(",").map((s) => s.trim());
+            if (ingList.length === 0) {
+                alert("Please provide at least one ingredient");
+                return;
+            }
 
-            await axios.post(`${BASE_URL}/api/recipes`, {
+            const stepsList = steps.split(",").map((s) => s.trim()).filter(s => s.trim() !== "");
+
+            if (stepsList.length === 0) {
+                alert("Please provide at least one step");
+                return;
+            }
+
+            await api.post("/api/recipes", {
                 name,
                 dietType: diet,
+                image,
                 ingredients: ingList,
                 steps: stepsList,
             });
 
             alert("Recipe added!");
-        } catch {
-            alert("Error adding recipe.");
+            // Clear form
+            setName("");
+            setDiet("");
+            setImage("");
+            setIngredients("");
+            setSteps("");
+        } catch (error: any) {
+            const message = error.response?.data?.message || "Error adding recipe. Please try again.";
+            alert(message);
         }
     };
 
@@ -46,10 +68,20 @@ export default function Add() {
 
             <TextInput
                 style={styles.input}
-                placeholder="Diet Type (vegan, keto, etc.)"
+                placeholder="Diet Type (regular, vegan, vegetarian, keto, diabetic)"
                 placeholderTextColor="#7D8A95"
                 value={diet}
                 onChangeText={setDiet}
+            />
+
+            <TextInput
+                style={styles.input}
+                placeholder="Image URL"
+                placeholderTextColor="#7D8A95"
+                value={image}
+                onChangeText={setImage}
+                keyboardType="url"
+                autoCapitalize="none"
             />
 
             <TextInput
