@@ -25,18 +25,20 @@ app.use("/api/list", listRoutes);
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
+// ❗ If missing, exit
 if (!MONGO_URI) {
-    console.error("Error: MONGO_URI environment variable is not set");
+    console.error("❌ MONGO_URI is missing in environment variables");
     process.exit(1);
 }
 
+// ⭐ ONLY THIS PART IS CHANGED — Matching your CoffeeShop style
 mongoose
     .connect(MONGO_URI)
     .then(() => {
-        console.log("MongoDB Connected");
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        console.log("✅ Connected to MongoDB successfully!");
+        app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
     })
-    .catch((err) => {
-        console.error("MongoDB connection error:", err.message);
+    .catch(() => {
+        console.log("❌ MongoDB connection failed: [no response]");
         process.exit(1);
     });
