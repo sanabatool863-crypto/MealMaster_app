@@ -5,14 +5,8 @@ import { Platform } from "react-native";
 
 // Auto-detect backend URL based on platform
 const getBaseURL = () => {
-    if (Platform.OS === "web") {
-        // For web, always use localhost
-        return "http://localhost:5000";
-    } else {
-        // For mobile, use the configured BASE_URL or default to localhost
-        // Change this to your computer's IP when testing on mobile devices
-        return BASE_URL || "http://192.168.0.120:5000";
-    }
+    // Use the configured BASE_URL for all platforms (now pointing to Vercel)
+    return BASE_URL || "https://meal-master-app-6ase.vercel.app";
 };
 
 // Web-compatible storage
